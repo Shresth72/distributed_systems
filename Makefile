@@ -24,3 +24,7 @@ get_log:
 test_log:
 	cd internal/log && \
 	go test .
+
+test_server:
+	cd internal/server && \
+	go test .
