@@ -1,0 +1,16 @@
+{
+  "CN": "Shresth's CA",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "IN",
+      "L": "MH",
+      "ST": "Mumbai",
+      "O": "Distributed logger",
+      "OU": "CA Services"
+    }
+  ]
+}

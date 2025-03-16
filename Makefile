@@ -1,5 +1,5 @@
 # ProtoBuf
-compile:
+compile_protoc:
 	protoc api/v1/*.proto \
 		--go_out=. \
 		--go-grpc_out=. \
@@ -7,7 +7,7 @@ compile:
 		--go-grpc_opt=paths=source_relative \
 		--proto_path=.
 
-test:
+test_protoc:
 	go test -race ./
 
 # Logger
@@ -20,7 +20,7 @@ post_log:
 get_log:
 	curl -X GET localhost:6969 -d '{"offset": ${OFFSET}}'
 
-# Test
+# Run Tests
 test_log:
 	cd internal/log && \
 	go test .
@@ -28,3 +28,32 @@ test_log:
 test_server:
 	cd internal/server && \
 	go test .
+
+# Generate CA Certs
+CONFIG_PATH=.proglog/
+
+.PHONY: ca_init
+ca_init:
+	mkdir -p ${CONFIG_PATH}
+
+.PHONY: ca_gencert
+ca_gencert:
+	cfssl gencert \
+		-initca cert/ca-csr.json | cfssljson -bare ca
+	cfssl gencert \
+		-ca=ca.pem \
+		-ca-key=ca-key.pem \
+		-config=cert/ca-config.json \
+		-profile=server \
+		cert/server-csr.json | cfssljson -bare server
+	cfssl gencert \
+		-ca=ca.pem \
+		-ca-key=ca-key.pem \
+		-config=cert/ca-config.json \
+		-profile=client \
+		cert/client-csr.json | cfssljson -bare client
+	mv *.pem *.csr ${CONFIG_PATH}
+
+.PHONY: ca_test
+ca_test:
+	go test -race ./...
