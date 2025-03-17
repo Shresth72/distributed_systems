@@ -5,11 +5,15 @@ import (
 )
 
 var (
-	CAFile        = configFile("ca.pem")
-	ServerCerFile = configFile("server.pem")
-	ServerKeyFile = configFile("server-key.pem")
-	ClientCerFile = configFile("client.pem")
-	ClientKeyFile = configFile("client-key.pem")
+	CAFile              = configFile("ca.pem")
+	ServerCerFile       = configFile("server.pem")
+	ServerKeyFile       = configFile("server-key.pem")
+	RootClientCerFile   = configFile("root-client.pem")
+	RootClientKeyFile   = configFile("root-client-key.pem")
+	NobodyClientCerFile = configFile("nobody-client.pem")
+	NobodyClientKeyFile = configFile("nobody-client-key.pem")
+	ACLModelFile        = configFile("model.conf")
+	ACLPolicyFile       = configFile("policy.csv")
 )
 
 func configFile(filename string) string {
@@ -17,5 +21,5 @@ func configFile(filename string) string {
 	if err != nil {
 		panic("failed to resolve project root: " + err.Error())
 	}
-	return filepath.Join(rootDir, ".proglog", filename)
+	return filepath.Join(rootDir, ".certs", filename)
 }

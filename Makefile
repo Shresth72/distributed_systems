@@ -7,9 +7,6 @@ compile_protoc:
 		--go-grpc_opt=paths=source_relative \
 		--proto_path=.
 
-test_protoc:
-	go test -race ./
-
 # Logger
 VALUE ?= TGV0J3MgR28gIzIK
 OFFSET ?= 0
@@ -30,30 +27,46 @@ test_server:
 	go test .
 
 # Generate CA Certs
-CONFIG_PATH=.proglog/
+CERT_PATH=.certs
+CONFIG_DIR=security
+CONFIG_FILES := model.conf policy.csv
 
-.PHONY: ca_init
-ca_init:
-	mkdir -p ${CONFIG_PATH}
+.PHONY: init
+init:
+	mkdir -p ${CERT_PATH}
 
-.PHONY: ca_gencert
-ca_gencert:
-	cfssl gencert \
-		-initca cert/ca-csr.json | cfssljson -bare ca
-	cfssl gencert \
-		-ca=ca.pem \
-		-ca-key=ca-key.pem \
-		-config=cert/ca-config.json \
+.PHONY: copy-configs
+copy-configs: init
+	for file in $(CONFIG_FILES); do \
+		cp -u ${CONFIG_DIR}/$$file ${CERT_PATH}/$$file; \
+	done
+
+.PHONY: gencert
+gencert: init
+	@test -f ${CERT_PATH}/ca.pem || cfssl gencert \
+		-initca ${CONFIG_DIR}/ca-csr.json | cfssljson -bare ${CERT_PATH}/ca
+	@test -f ${CERT_PATH}/server.pem || cfssl gencert \
+		-ca=${CERT_PATH}/ca.pem \
+		-ca-key=${CERT_PATH}/ca-key.pem \
+		-config=${CONFIG_DIR}/ca-config.json \
 		-profile=server \
-		cert/server-csr.json | cfssljson -bare server
-	cfssl gencert \
-		-ca=ca.pem \
-		-ca-key=ca-key.pem \
-		-config=cert/ca-config.json \
+		${CONFIG_DIR}/server-csr.json | cfssljson -bare ${CERT_PATH}/server
+	@test -f ${CERT_PATH}/root-client.pem || cfssl gencert \
+		-ca=${CERT_PATH}/ca.pem \
+		-ca-key=${CERT_PATH}/ca-key.pem \
+		-config=${CONFIG_DIR}/ca-config.json \
 		-profile=client \
-		cert/client-csr.json | cfssljson -bare client
-	mv *.pem *.csr ${CONFIG_PATH}
+		-cn="root" \
+		${CONFIG_DIR}/client-csr.json | cfssljson -bare ${CERT_PATH}/root-client
+	@test -f ${CERT_PATH}/nobody-client.pem || cfssl gencert \
+		-ca=${CERT_PATH}/ca.pem \
+		-ca-key=${CERT_PATH}/ca-key.pem \
+		-config=${CONFIG_DIR}/ca-config.json \
+		-profile=client \
+		-cn="nobody" \
+		${CONFIG_DIR}/client-csr.json | cfssljson -bare ${CERT_PATH}/nobody-client
 
-.PHONY: ca_test
-ca_test:
+# Test
+.PHONY: test
+test: init copy-configs gencert
 	go test -race ./...

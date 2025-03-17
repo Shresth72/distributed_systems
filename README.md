@@ -1,1 +1,1 @@
-# distributed_logging_system
+# Distributed Logging System
