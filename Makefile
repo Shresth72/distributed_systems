@@ -18,17 +18,24 @@ get_log:
 	curl -X GET localhost:6969 -d '{"offset": ${OFFSET}}'
 
 # Run Tests
+CLEAR ?= true
 test_log:
 	cd internal/log && \
 	go test .
 
+clean_test_metrics:
+	rm test/logs/metrics-*.log test/logs/traces-*.log
+
 test_server:
 	cd internal/server && \
-	go test .
+	go test . -v -debug=true
+ifneq ($(CLEAR), false)
+	$(MAKE) clean_test_metrics
+endif
 
 # Generate CA Certs
 CERT_PATH=.certs
-CONFIG_DIR=security
+CONFIG_DIR=test
 CONFIG_FILES := model.conf policy.csv
 
 .PHONY: init
