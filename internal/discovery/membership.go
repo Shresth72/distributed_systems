@@ -5,7 +5,6 @@ import (
 
 	"github.com/hashicorp/serf/serf"
 	"go.uber.org/zap"
-	"golang.org/x/tools/go/analysis/passes/ifaceassert"
 )
 
 // Serf Node
