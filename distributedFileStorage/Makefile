@@ -6,3 +6,14 @@ run: build
 
 test:
 	@go test ./... -v
+
+
+
+
+# cmd/tcp
+build_tcp:
+	@go build -o bin/tcp ./cmd/tcp
+
+run_tcp:
+	@./bin/tcp
+

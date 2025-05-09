@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -28,7 +29,7 @@ func (p *TCPPeer) Close() error {
 	return p.conn.Close()
 }
 
-type TCPTransportConfig struct {
+type TCPTransportOpts struct {
 	ListenAddr string
 	ShakeHands HandshakeFunc
 	Decoder    Decoder
@@ -36,7 +37,7 @@ type TCPTransportConfig struct {
 }
 
 type TCPTransport struct {
-	TCPTransportConfig
+	TCPTransportOpts
 	listener net.Listener
 	rpcch    chan RPC
 }
@@ -47,10 +48,10 @@ func (t *TCPTransport) Consume() <-chan RPC {
 	return t.rpcch
 }
 
-func NewTCPTransport(config TCPTransportConfig) *TCPTransport {
+func NewTCPTransport(config TCPTransportOpts) *TCPTransport {
 	return &TCPTransport{
-		TCPTransportConfig: config,
-		rpcch:              make(chan RPC),
+		TCPTransportOpts: config,
+		rpcch:            make(chan RPC),
 	}
 }
 
@@ -102,8 +103,8 @@ func (t *TCPTransport) handleConn(conn net.Conn) {
 	rpc := RPC{}
 	for {
 		if err := t.Decoder.Decode(conn, &rpc); err != nil {
-			if err == io.EOF {
-				fmt.Printf("Connection closed by: %v\n", conn.RemoteAddr())
+			if err == io.EOF || errors.Is(err, net.ErrClosed) {
+				fmt.Printf("Connection closed by: %v\n", peer.conn.RemoteAddr())
 				return
 			}
 			fmt.Printf("TCP error: %s\n", err)

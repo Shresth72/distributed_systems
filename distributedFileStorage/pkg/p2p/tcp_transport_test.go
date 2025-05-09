@@ -7,7 +7,7 @@ import (
 )
 
 func TestTCPTransport(t *testing.T) {
-	trConfig := TCPTransportConfig{
+	trConfig := TCPTransportOpts{
 		ListenAddr: ":3000",
 		ShakeHands: NOPHandshakeFunc,
 		Decoder:    DefaultDecoder{},
